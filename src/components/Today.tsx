@@ -1,5 +1,5 @@
-import { classesOn, upcomingProgrammes } from '../lib/schedule'
-import { dayOf, formatTime, isoDate, minutesOf, parseLocal } from '../lib/time'
+import { classesOn, freeGaps, upcomingProgrammes } from '../lib/schedule'
+import { dayOf, formatDuration, formatTime, isoDate, minutesOf, parseLocal } from '../lib/time'
 import type { ClassSession, Programme } from '../lib/types'
 
 export function Today({
@@ -16,6 +16,7 @@ export function Today({
   onDeleteProgramme: (id: string) => void
 }) {
   const classes = classesOn(sessions, dayOf(now))
+  const gaps = freeGaps(classes)
   const minute = minutesOf(now)
   const upcoming = upcomingProgrammes(programmes, now)
   const todayIso = isoDate(now)
@@ -30,9 +31,19 @@ export function Today({
           <p className="muted">No classes today.</p>
         ) : (
           <ol className="day-list">
-            {classes.map((c) => {
+            {classes.flatMap((c) => {
+              const gap = gaps.find((g) => g.end === c.start)
+              const free = gap ? (
+                <li key={`gap-${gap.start}`} className={`gap-item ${minute >= gap.end ? 'is-past' : ''}`}>
+                  <span className="day-time">{formatTime(gap.start)}</span>
+                  <span className="gap-text">
+                    Free for {formatDuration(gap.end - gap.start)}
+                    <span className="day-sub">a good window for reading or homework</span>
+                  </span>
+                </li>
+              ) : null
               const state = minute >= c.end ? 'past' : minute >= c.start ? 'now' : 'later'
-              return (
+              return [free,
                 <li key={c.id} className={`day-item type-${c.type.toLowerCase()} is-${state}`}>
                   <span className="day-time">
                     {formatTime(c.start)}
@@ -44,8 +55,8 @@ export function Today({
                   </span>
                   {state === 'now' && <span className="pill">Now</span>}
                   {state === 'past' && <span className="sr-only">(finished)</span>}
-                </li>
-              )
+                </li>,
+              ].filter(Boolean)
             })}
           </ol>
         )}
