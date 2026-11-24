@@ -1,5 +1,6 @@
 import { newId } from './id'
-import type { ClassSession, Day, SessionType } from './types'
+import { isoDate } from './time'
+import type { ClassSession, Day, Programme, SessionType, Task } from './types'
 
 /** An example second-year statistics timetable, so people can try the app before uploading their own. */
 const ROWS: [Day, string, string, string, string, SessionType, string][] = [
@@ -29,4 +30,26 @@ export function sampleTimetable(): ClassSession[] {
     venue,
     lecturer: '',
   }))
+}
+
+/** Example coursework and a seminar, dated around today so the sample week looks lived in. */
+export function sampleWork(now: Date): { tasks: Task[]; programmes: Programme[] } {
+  const on = (days: number, time: string) => `${isoDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + days))}T${time}`
+  const created = now.toISOString()
+  const task = (title: string, course: string, kind: Task['kind'], due: string, done = false): Task => ({
+    id: newId(), title, course, kind, due, notes: '', done, createdAt: created,
+  })
+  return {
+    tasks: [
+      task('Problem set 4: conditional probability', 'STAT 221', 'Homework', on(-1, '23:59')),
+      task('Regression project: data cleaning', 'STAT 225', 'Project', on(2, '17:00')),
+      task('Quiz on stratified sampling', 'STAT 227', 'Quiz or exam', on(4, '11:30')),
+      task('Read chapter 6, multiple regression', 'STAT 225', 'Reading', on(5, '09:00')),
+      task('ER diagram for the library database', 'DCIT 203', 'Assignment', on(9, '23:59')),
+      task('R lab 3: data frames', 'STAT 223', 'Homework', on(-3, '15:30'), true),
+    ],
+    programmes: [
+      { id: newId(), title: 'Department seminar: careers in data science', date: on(3, '00:00').slice(0, 10), start: 16 * 60, end: 17 * 60 + 30, venue: 'JQB 19' },
+    ],
+  }
 }

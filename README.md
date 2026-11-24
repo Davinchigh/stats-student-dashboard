@@ -13,6 +13,10 @@ I first built this idea in college for fellow statistics students. The original 
 * **Today's classes** and a **week view** with a line showing the current time. On phones the week switches to one day at a time.
 * **Assignments and homework** grouped into overdue, due this week and later, with due dates shown as "Today", "Tomorrow" or the date.
 * **Programmes** for one-off events like seminars and department meetings.
+* **The week in numbers** at the top: classes, hours in class, work due in the next seven days and anything overdue.
+* **Free time** between today's classes is called out, so a four-hour gap becomes a plan.
+* **Add to calendar** downloads an `.ics` file with every class as a weekly repeating event, for Google Calendar, Outlook or Apple Calendar.
+* **Light and dark themes** that follow your device, or pick one yourself.
 * Add, edit or delete classes by hand too.
 * **Private by default.** Everything is stored in your browser. Nothing is sent to a server. Export a backup to move it to another device.
 
@@ -33,7 +37,7 @@ Only Day, Start, End and a course code or title are required. A single `Time` co
 ```sh
 npm install
 npm run dev      # start the app
-npm test         # run the timetable parsing tests
+npm test         # run the parsing, scheduling and calendar tests
 npm run build    # production build in dist/
 ```
 

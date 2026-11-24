@@ -70,3 +70,39 @@ export function courseList(sessions: ClassSession[]): { code: string; title: str
   for (const s of sessions) if (!seen.has(s.courseCode)) seen.set(s.courseCode, s.courseTitle)
   return [...seen.entries()].map(([code, title]) => ({ code, title })).sort((a, b) => a.code.localeCompare(b.code))
 }
+
+export interface Gap {
+  start: number
+  end: number
+}
+
+/** Free time of at least `min` minutes between one day's classes (not before the first or after the last). */
+export function freeGaps(classes: ClassSession[], min = 60): Gap[] {
+  const sorted = [...classes].sort((a, b) => a.start - b.start)
+  const gaps: Gap[] = []
+  let busyUntil = sorted[0]?.end ?? 0
+  for (const c of sorted.slice(1)) {
+    if (c.start - busyUntil >= min) gaps.push({ start: busyUntil, end: c.start })
+    busyUntil = Math.max(busyUntil, c.end)
+  }
+  return gaps
+}
+
+export interface WeekStats {
+  classes: number
+  classHours: number
+  dueThisWeek: number
+  overdue: number
+}
+
+/** The numbers for the strip at the top: how full the week is and what is due. */
+export function weekStats(sessions: ClassSession[], tasks: Task[], now: Date): WeekStats {
+  const groups = groupTasks(tasks, now)
+  const minutes = sessions.reduce((n, s) => n + (s.end - s.start), 0)
+  return {
+    classes: sessions.length,
+    classHours: Math.round((minutes / 60) * 10) / 10,
+    dueThisWeek: groups['Due this week'].length,
+    overdue: groups.Overdue.length,
+  }
+}

@@ -6,7 +6,10 @@ import { NextUp } from './components/NextUp'
 import { Tasks } from './components/Tasks'
 import { Today } from './components/Today'
 import { WeekView } from './components/WeekView'
-import { sampleTimetable } from './lib/sample'
+import { ThemeToggle } from './components/ThemeToggle'
+import { WeekStats } from './components/WeekStats'
+import { buildIcs } from './lib/ics'
+import { sampleTimetable, sampleWork } from './lib/sample'
 import { courseList } from './lib/schedule'
 import { useAppData, useNow, validate } from './lib/store'
 import { EMPTY_DATA, type ClassSession } from './lib/types'
@@ -35,6 +38,22 @@ export default function App() {
     })
     close()
     flash(`Saved ${session.courseCode}.`)
+  }
+
+  const loadSample = () => {
+    const work = sampleWork(new Date())
+    update((d) => ({ ...d, sessions: sampleTimetable(), tasks: d.tasks.length ? d.tasks : work.tasks, programmes: d.programmes.length ? d.programmes : work.programmes }))
+  }
+
+  const exportCalendar = () => {
+    const blob = new Blob([buildIcs(data.sessions, new Date())], { type: 'text/calendar' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'class-timetable.ics'
+    a.click()
+    URL.revokeObjectURL(url)
+    flash('Calendar file downloaded. Open it to add your classes to Google, Outlook or Apple Calendar.')
   }
 
   const exportBackup = () => {
@@ -78,11 +97,16 @@ export default function App() {
             <button type="button" className="text-button" onClick={() => setModal({ kind: 'import' })}>
               Upload new timetable
             </button>
+            <button type="button" className="text-button" onClick={exportCalendar}>
+              Add to calendar
+            </button>
             <button type="button" className="text-button" onClick={() => setModal({ kind: 'data' })}>
               Your data
             </button>
+            <ThemeToggle />
           </nav>
         )}
+        {!hasTimetable && <ThemeToggle />}
       </header>
 
       {saveError && (
@@ -101,7 +125,7 @@ export default function App() {
           <ImportTimetable hasExisting={false} onConfirm={(s) => setSessions(s)} />
           <p className="welcome-alt">
             No file handy?{' '}
-            <button type="button" className="text-button" onClick={() => setSessions(sampleTimetable())}>
+            <button type="button" className="text-button" onClick={loadSample}>
               Try a sample timetable
             </button>{' '}
             or{' '}
@@ -113,6 +137,9 @@ export default function App() {
         </main>
       ) : (
         <main className="dashboard">
+          <div className="col-full">
+            <WeekStats sessions={data.sessions} tasks={data.tasks} now={now} />
+          </div>
           <div className="col-left">
             <NextUp sessions={data.sessions} now={now} />
             <Today
